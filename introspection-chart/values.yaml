@@ -1,0 +1,4 @@
+prometheusEnabled: false
+grafanaEnabled: false
+# Refresh Rate measured in hours
+refreshRate: 1

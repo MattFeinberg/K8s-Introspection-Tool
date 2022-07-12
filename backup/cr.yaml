@@ -1,0 +1,169 @@
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  annotations:
+    meta.helm.sh/release-name: gpu-operator-1655141133
+    meta.helm.sh/release-namespace: gpu-operator-resources
+  creationTimestamp: "2022-06-13T17:25:36Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/component: gpu-operator
+    app.kubernetes.io/managed-by: Helm
+  name: cluster-policy
+  resourceVersion: "3507154"
+  uid: 942e7d2b-3b56-463a-9c98-c0a0f52bdccd
+spec:
+  daemonsets:
+    priorityClassName: system-node-critical
+    tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+  dcgm:
+    enabled: false
+    hostPort: 5555
+    image: dcgm
+    imagePullPolicy: IfNotPresent
+    repository: nvcr.io/nvidia/cloud-native
+    version: 2.3.4-1-ubuntu20.04
+  dcgmExporter:
+    env:
+    - name: DCGM_EXPORTER_LISTEN
+      value: :9400
+    - name: DCGM_EXPORTER_KUBERNETES
+      value: "true"
+    - name: DCGM_EXPORTER_COLLECTORS
+      value: /etc/dcgm-exporter/dcp-metrics-included.csv
+    image: dcgm-exporter
+    imagePullPolicy: IfNotPresent
+    repository: nvcr.io/nvidia/k8s
+    version: 2.3.4-2.6.4-ubuntu20.04
+  devicePlugin:
+    env:
+    - name: PASS_DEVICE_SPECS
+      value: "true"
+    - name: FAIL_ON_INIT_ERROR
+      value: "true"
+    - name: DEVICE_LIST_STRATEGY
+      value: envvar
+    - name: DEVICE_ID_STRATEGY
+      value: uuid
+    - name: NVIDIA_VISIBLE_DEVICES
+      value: all
+    - name: NVIDIA_DRIVER_CAPABILITIES
+      value: all
+    image: k8s-device-plugin
+    imagePullPolicy: IfNotPresent
+    repository: nvcr.io/nvidia
+    securityContext:
+      privileged: true
+    version: v0.11.0-ubi8
+  driver:
+    certConfig:
+      name: ""
+    enabled: true
+    image: driver
+    imagePullPolicy: IfNotPresent
+    kernelModuleConfig:
+      name: ""
+    licensingConfig:
+      configMapName: ""
+      nlsEnabled: false
+    manager:
+      env:
+      - name: ENABLE_AUTO_DRAIN
+        value: "true"
+      - name: DRAIN_USE_FORCE
+        value: "false"
+      - name: DRAIN_POD_SELECTOR_LABEL
+        value: ""
+      - name: DRAIN_TIMEOUT_SECONDS
+        value: 0s
+      - name: DRAIN_DELETE_EMPTYDIR_DATA
+        value: "false"
+      image: k8s-driver-manager
+      imagePullPolicy: IfNotPresent
+      repository: nvcr.io/nvidia/cloud-native
+      version: v0.3.0
+    rdma:
+      enabled: false
+      useHostMofed: false
+    repoConfig:
+      configMapName: ""
+    repository: nvcr.io/nvidia
+    securityContext:
+      privileged: true
+      seLinuxOptions:
+        level: s0
+    version: 510.47.03
+    virtualTopology:
+      config: ""
+  gfd:
+    env:
+    - name: GFD_SLEEP_INTERVAL
+      value: 60s
+    - name: GFD_FAIL_ON_INIT_ERROR
+      value: "true"
+    image: gpu-feature-discovery
+    imagePullPolicy: IfNotPresent
+    repository: nvcr.io/nvidia
+    version: v0.5.0
+  mig:
+    strategy: single
+  migManager:
+    config:
+      name: ""
+    enabled: true
+    env:
+    - name: WITH_REBOOT
+      value: "false"
+    gpuClientsConfig:
+      name: ""
+    image: k8s-mig-manager
+    imagePullPolicy: IfNotPresent
+    repository: nvcr.io/nvidia/cloud-native
+    securityContext:
+      privileged: true
+    version: v0.3.0-ubuntu20.04
+  nodeStatusExporter:
+    enabled: false
+    image: gpu-operator-validator
+    imagePullPolicy: IfNotPresent
+    repository: nvcr.io/nvidia/cloud-native
+    version: v1.10.1
+  operator:
+    defaultRuntime: docker
+    initContainer:
+      image: cuda
+      imagePullPolicy: IfNotPresent
+      repository: nvcr.io/nvidia
+      version: 11.4.2-base-ubi8
+    runtimeClass: nvidia
+  psp:
+    enabled: false
+  toolkit:
+    enabled: true
+    image: container-toolkit
+    imagePullPolicy: IfNotPresent
+    repository: nvcr.io/nvidia/k8s
+    securityContext:
+      privileged: true
+      seLinuxOptions:
+        level: s0
+    version: v1.9.0-ubuntu18.04
+  validator:
+    image: gpu-operator-validator
+    imagePullPolicy: IfNotPresent
+    plugin:
+      env:
+      - name: WITH_WORKLOAD
+        value: "true"
+    repository: nvcr.io/nvidia/cloud-native
+    securityContext:
+      privileged: true
+      seLinuxOptions:
+        level: s0
+    version: v1.10.1
+status:
+  namespace: gpu-operator-resources
+  state: ready

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: introspection-web
+  namespace: introspection-resources
+  labels:
+    app: introspection-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: introspection-web
+  template:
+    metadata:
+      labels:
+        app: introspection-web
+    spec:
+      containers:
+      - name: introspection-web-server
+        image: mfeinb02/introspection-web-server:latest
+        ports:
+        - containerPort: 8000
+      serviceAccountName: introspection-serviceaccount
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: introspection-web-np
+  namespace: introspection-resources
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 9090
+    targetPort: 8000
+    nodePort: 30069
+  selector:
+    app: introspection-web
