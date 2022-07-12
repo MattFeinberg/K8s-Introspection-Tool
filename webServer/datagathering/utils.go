@@ -39,7 +39,7 @@ func HandleDataUpdates() (ClusterInfo) {
     // update nodes
     cluster.Nodes, err = updateNodes(clientset, config)
     if err != nil {
-        fmt.Println("Error updating nodes")
+        fmt.Println("Error updating nodes\n", err)
         //TODO: dont reutrn cluster in error case
         return cluster
     }
@@ -137,7 +137,8 @@ func GetK8s() (*kubernetes.Clientset, *rest.Config, error) {
 func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName string) (string, error){
     // find the driver daemonset associated with this node
     var podName string
-    namespace := "gpu-operator-resources"
+    //TODO: namespaces might be unique to a cluster?
+    namespace := "nvidia-gpu-operator"
     pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(),
                  metav1.ListOptions{ FieldSelector: "spec.nodeName=" + nodeName,})
     if err != nil {
@@ -161,6 +162,8 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
            Namespace(namespace).SubResource("exec")
     option := &corev1.PodExecOptions{
         Command: []string{"nvidia-smi", "-q", "-x"},
+        //TODO: confirm that it's always this container?
+        Container: "nvidia-driver-ctr",
         Stdin:   false,
         Stdout:  true,
         Stderr:  true,
