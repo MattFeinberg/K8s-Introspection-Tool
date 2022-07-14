@@ -15,7 +15,7 @@ h1 {text-align: center;}
 </div>
 </body>
 <script>
-    if ( {{.GrafanaEnabled}} || {{.PrometheusEnabled}}) {
+    if ( {{.TelemetryEnabled}}) {
         var tag = document.createElement("button");
         tag.setAttribute("onclick", "window.open('" + {{.PrometheusIP}} + "');" );
         tag.setAttribute("class","button");
@@ -23,14 +23,12 @@ h1 {text-align: center;}
         tag.appendChild(text);
         var element = document.getElementById("main");
         element.appendChild(tag);
-    }
-    if ({{.GrafanaEnabled}}) {
-        var tag = document.createElement("button");
+
+        tag = document.createElement("button");
         tag.setAttribute("onclick", "window.open('" + {{.GrafanaIP}} + "');" );
         tag.setAttribute("class","button");
-        var text = document.createTextNode("Grafana");
+        text = document.createTextNode("Grafana");
         tag.appendChild(text);
-        var element = document.getElementById("main");
         element.appendChild(tag);
     }
 </script>

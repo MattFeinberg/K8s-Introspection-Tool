@@ -6,7 +6,7 @@ import(
     "fmt"
     "net/http"
     "html/template"
-    "strings"
+    "os"
     "strconv"
     "context"
     "k8s.io/client-go/kubernetes"
@@ -80,32 +80,22 @@ func executeIndex(w http.ResponseWriter, r *http.Request, clientset *kubernetes.
         return
     }
 
-    // get prometheus and grafana IP
-    // maybe make this a function
-    namespace := "introspection-resources"
-    pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+    //get list of all nodes
+    nodeList, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
     if err != nil {
-        fmt.Println("Error getting pods", err)
+        fmt.Println("Error in getting list of cluster.Nodes\n", err)
         return
     }
 
-    IPs :=  TelemetryIPs{GrafanaEnabled: false, PrometheusEnabled: false,}
-    for _, pod := range pods.Items {
-        if !IPs.GrafanaEnabled && strings.HasPrefix(pod.Name, "grafana") {
-            IPs.GrafanaIP = "http://" + pod.Status.HostIP + ":32000"
-            IPs.GrafanaEnabled = true
-        }
-        if !IPs.PrometheusEnabled && strings.HasPrefix(pod.Name, "prometheus") {
-            IPs.PrometheusIP = "http://" + pod.Status.HostIP + ":30070"
-            IPs.PrometheusEnabled = true
-        }
-        if IPs.GrafanaEnabled && IPs.PrometheusEnabled {
-            break
-        }
-    }
-    //note: add error if grafana is enabled and prometheus isnt
-    //      this should not be possible due to helm chart
+    // Since we use NodePort, we can use any node
+    nodeIP := nodeList.Items[0].Status.Addresses[0].Address
 
+    IPs :=  TelemetryIPs{TelemetryEnabled: false,}
+    if os.Getenv("TELEMETRY") == "true" {
+        IPs.TelemetryEnabled = true
+        IPs.PrometheusIP = "http://" + nodeIP + ":30090"
+        IPs.GrafanaIP = "http://" + nodeIP + ":32322"
+    }
 
     err = t.ExecuteTemplate(w, fileName, IPs)
     if err != nil {

@@ -18,6 +18,11 @@ spec:
       containers:
       - name: introspection-web-server
         image: mfeinb02/introspection-web-server:latest
+        {{ if .Values.telemetry }}
+        env:
+        - name: TELEMETRY
+          value: "true"
+        {{ end }}
         ports:
         - containerPort: 8000
       serviceAccountName: introspection-serviceaccount

@@ -1,4 +1,17 @@
-Woohoo!!!
+Cluster introspection tool has been deployed and is accessible at:
 
+http://<machine-IP>:30069
 
+Conditionally:
+Prometheus and Grafana have been deployed and integrated with DCGM for
+GPU telemetry. Both are accesible via the introspection home page, but
+can be accessed individually at:
 
+Prometheus: http://<machine-IP>:30090
+
+Grafana: http://<machine-IP>:32322
+    - Username: admin
+    - Password: admin
+    - Find DCGM dashboard by navigating to Dashboards>General
+
+NOTE: It may take a few mintues for web pages and metrics to become availible

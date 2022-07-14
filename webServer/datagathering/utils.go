@@ -137,9 +137,10 @@ func GetK8s() (*kubernetes.Clientset, *rest.Config, error) {
 func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName string) (string, error){
     // find the driver daemonset associated with this node
     var podName string
+    var podNamespace string
     //TODO: namespaces might be unique to a cluster?
-    namespace := "nvidia-gpu-operator"
-    pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(),
+    //namespace := "nvidia-gpu-operator"
+    pods, err := clientset.CoreV1().Pods("").List(context.TODO(),
                  metav1.ListOptions{ FieldSelector: "spec.nodeName=" + nodeName,})
     if err != nil {
         fmt.Println("Error getting pods")
@@ -149,6 +150,7 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
     for _, pod := range pods.Items {
         if strings.HasPrefix(pod.Name, "nvidia-driver-daemonset") {
             podName = pod.Name
+            podNamespace = pod.Namespace
             found = true
             break
         }
@@ -159,7 +161,7 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
     }
 
     req := clientset.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
-           Namespace(namespace).SubResource("exec")
+           Namespace(podNamespace).SubResource("exec")
     option := &corev1.PodExecOptions{
         Command: []string{"nvidia-smi", "-q", "-x"},
         //TODO: confirm that it's always this container?
