@@ -1,8 +1,7 @@
 package webhosting
 
 type TelemetryIPs struct {
-    GrafanaEnabled bool
-    PrometheusEnabled bool
+    TelemetryEnabled bool
     GrafanaIP string
     PrometheusIP string
 }
