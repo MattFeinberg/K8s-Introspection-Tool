@@ -1,0 +1,107 @@
+{
+    "K8sVersion": "v1.23.5",
+    "NumNodes": 2,
+    "NodeNames": [
+        "matthew-node",
+        "node-2"
+    ],
+    "NumUnhealthyNodes": 0,
+    "Distribution": "Standard",
+    "TotalGPUs": 2,
+    "TotalNICs": 0,
+    "TotalMIG": 0,
+    "TimeUpdated": "07-20-2022 16:35:42",
+    "GPUDist": {
+        "Tesla T4": 2
+    },
+    "Nodes": [
+        {
+            "NodeName": "matthew-node",
+            "OSVersion": "Ubuntu 20.04.4 LTS",
+            "OS": "linux",
+            "VMOrBareMetal": "VM",
+            "KubeletVersion": "v1.23.5",
+            "ContainerRuntime": "containerd://1.6.2",
+            "NumGPUs": "",
+            "DriverVersion": "510.47.03",
+            "CudaVersion": "11.6",
+            "AttachedGPUs": 1,
+            "AttachedNICs": 0,
+            "NVSMIExitCode": 0,
+            "VGPUHostDriver": "N/A",
+            "NICs": null,
+            "GPUs": [
+                {
+                    "ProductName": "Tesla T4",
+                    "MIGInfo": {
+                        "MIGStatus": "N/A"
+                    },
+                    "MIGDevices": {
+                        "MIGDevice": null
+                    },
+                    "GPUPartNumber": "900-2G183-0000-000",
+                    "GSPFirmwareVersion": "510.47.03",
+                    "GpuVirtualizationMode": {
+                        "VirtualizationMode": "Pass-Through",
+                        "VGPUProfile": ""
+                    },
+                    "FbMemoryUsage": {
+                        "Total": "15360 MiB",
+                        "Reserved": "449 MiB",
+                        "Used": "0 MiB",
+                        "Free": "14910 MiB"
+                    },
+                    "Bar1MemoryUsage": {
+                        "Total": "256 MiB",
+                        "Used": "2 MiB",
+                        "Free": "254 MiB"
+                    }
+                }
+            ]
+        },
+        {
+            "NodeName": "node-2",
+            "OSVersion": "Ubuntu 20.04.4 LTS",
+            "OS": "linux",
+            "VMOrBareMetal": "VM",
+            "KubeletVersion": "v1.23.5",
+            "ContainerRuntime": "containerd://1.6.2",
+            "NumGPUs": "",
+            "DriverVersion": "510.47.03",
+            "CudaVersion": "11.6",
+            "AttachedGPUs": 1,
+            "AttachedNICs": 0,
+            "NVSMIExitCode": 0,
+            "VGPUHostDriver": "N/A",
+            "NICs": null,
+            "GPUs": [
+                {
+                    "ProductName": "Tesla T4",
+                    "MIGInfo": {
+                        "MIGStatus": "N/A"
+                    },
+                    "MIGDevices": {
+                        "MIGDevice": null
+                    },
+                    "GPUPartNumber": "900-2G183-0000-001",
+                    "GSPFirmwareVersion": "510.47.03",
+                    "GpuVirtualizationMode": {
+                        "VirtualizationMode": "Pass-Through",
+                        "VGPUProfile": ""
+                    },
+                    "FbMemoryUsage": {
+                        "Total": "15360 MiB",
+                        "Reserved": "449 MiB",
+                        "Used": "0 MiB",
+                        "Free": "14910 MiB"
+                    },
+                    "Bar1MemoryUsage": {
+                        "Total": "256 MiB",
+                        "Used": "2 MiB",
+                        "Free": "254 MiB"
+                    }
+                }
+            ]
+        }
+    ]
+}

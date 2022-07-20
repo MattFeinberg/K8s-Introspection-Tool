@@ -14,42 +14,85 @@ h1 {text-align: left;}
 <hr id="line"/>
 
 <p>
-Guest OS Version: {{.Node.OSVersion}}
+Operating System: {{.Node.OS}}
 <span style="float:right; font-style: italic;">Last Updated: {{.TimeUpdated}}</span><br>
-Kubernetes Version: {{.Node.K8sVersion}}<br>
-Provider: {{.Node.Provider}}<br>
+OS Version: {{.Node.OSVersion}}<br>
+VM/Bare Metal: {{.Node.VMOrBareMetal}}<br>
+Kubelet Version: {{.Node.KubeletVersion}}<br>
 Container Runtime: {{.Node.ContainerRuntime}}<br>
-GPUs connected: {{.Node.AttachedGpus}}<br>
+GPUs connected: {{.Node.AttachedGPUs}}<br>
+NICs connected: {{.Node.AttachedNICs}}<br>
 CUDA Version: {{.Node.CudaVersion}}<br>
 CUDA Driver Version: {{.Node.DriverVersion}}<br>
+vGPU Host Driver: {{.Node.VGPUHostDriver}}<br>
+Exit Code from NVSMI: {{.Node.NVSMIExitCode}}<br>
 </p>
 
 
-<div id="GPUs" style="white-space: pre"><h3>GPUs</h3></div>
+<div id="Cards" style="white-space: pre"></div>
 <script>
+    element = document.getElementById("Cards");
     var GPUs = {{.Node.GPUs}}
-    var length = GPUs.length
-    element = document.getElementById("GPUs");
-    for (var i = 0; i < length; i++) {
-        var tag = document.createElement("p");
-        var text = document.createTextNode("GPU Name: " + GPUs[i].ProductName + "\n");
+    if (GPUs != null) {
+        var length = GPUs.length
+        var tag = document.createElement("h3");
+        var text = document.createTextNode("GPUs");
         tag.appendChild(text);
-        text = document.createTextNode("GPU Part Number: " + GPUs[i].GpuPartNumber + "\n");
-        tag.appendChild(text);
-        text = document.createTextNode("FB Memory Size: " + GPUs[i].FbMemoryUsage.Total + "\n");
-        tag.appendChild(text);
-        text = document.createTextNode("GSP Firmware Version: " + GPUs[i].GspFirmwareVersion + "\n");
-        tag.appendChild(text);
-        if (GPUs[i].HostVgpuMode == null) {
-            text = document.createTextNode("Physical/Virtual: Physical\n");
-        } else {
-            text = document.createTextNode("Physical/Virtual: Virtual\n");
-            // more Vgpu info here?
+        element.appendChild(tag)
+        for (var i = 0; i < length; i++) {
+            var tag = document.createElement("p");
+            var text = document.createTextNode("GPU Name: " + GPUs[i].ProductName + "\n");
+            tag.appendChild(text);
+            text = document.createTextNode("GPU Part Number: " + GPUs[i].GPUPartNumber + "\n");
+            tag.appendChild(text);
+            text = document.createTextNode("FB Memory Size: " + GPUs[i].FbMemoryUsage.Total + "\n");
+            tag.appendChild(text);
+            text = document.createTextNode("GSP Firmware Version: " + GPUs[i].GSPFirmwareVersion + "\n");
+            tag.appendChild(text);
+            if (GPUs[i].GpuVirtualizationMode.VirtualizationMode == "VGPU") {
+                text = document.createTextNode("Physical/Virtual: Virtual\n");
+                tag.appendChild(text);
+                text = document.createTextNode(
+                           "vGPU Profile: " + GPUs[i].GpuVirtualizationMode.VGPUProfile + "\n");
+                // more Vgpu info here?
+            } else {
+                text = document.createTextNode("Physical/Virtual: Physical\n");
+            }
+            tag.appendChild(text);
+            text = document.createTextNode("MIG: " + GPUs[i].MIGInfo.MIGStatus + "\n");
+            tag.appendChild(text);
+            if (GPUs[i].MIGInfo.MIGStatus == "Enabled") {
+                var migHeader = document.createElement("h4");
+                text = document.createTextNode("MIG Profiles:");
+                migHeader.appendChild(text);
+                tag.appendChild(migHeader);
+
+                //TODO: update this naming system - this is an array
+                var MIGs = GPUs[i].MIGDevices.MIGDevice;
+                var MIGLength = MIGs.length;
+                for (var j = 0; j < MIGLength; j++) {
+                    var profileHeader = document.createElement("h5");
+                    text = document.createTextNode("Instance ID: " + MIGs[j].GPUInstanceID);
+                    profileHeader.appendChild(text);
+                    tag.appendChild(profileHeader);
+                }
+            }
+            element.appendChild(tag);
         }
+    }
+    //NICs
+    var NICs = {{ .Node.NICs }}
+    if (NICs != null) {
+        var tag = document.createElement("h3");
+        var text = document.createTextNode("Mellanox NICs");
         tag.appendChild(text);
-        text = document.createTextNode("MIG: " + GPUs[i].MigMode.CurrentMig + "\n");
-        tag.appendChild(text);
-        element.appendChild(tag);
+        element.appendChild(tag)
+        for (var i = 0; i < length; i++) {
+            tag = document.createElement("p");
+            text = document.createTextNode("Card: " + NICs[i] + "\n");
+            tag.appendChild(text);
+            element.appendChild(tag)
+        }
     }
 </script>
 <button class="button" onclick="window.location.href = '/clusterinfo';"> Cluster Information </button>

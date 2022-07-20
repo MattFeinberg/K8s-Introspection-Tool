@@ -3,27 +3,25 @@ package datagathering
 import(
     "time"
     "fmt"
-    "encoding/csv"
+    //"encoding/csv"
     "encoding/json"
     "strings"
+    "strconv"
     "bytes"
     "os"
+    "bufio"
     "context"
     "encoding/xml"
-     "k8s.io/client-go/kubernetes"
-     corev1 "k8s.io/api/core/v1"
-     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-     "k8s.io/client-go/kubernetes/scheme"
-     "k8s.io/client-go/tools/clientcmd"
-     "k8s.io/client-go/tools/remotecommand"
-     "k8s.io/client-go/rest"
+    "k8s.io/client-go/kubernetes"
+    corev1 "k8s.io/api/core/v1"
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/client-go/kubernetes/scheme"
+    "k8s.io/client-go/tools/clientcmd"
+    "k8s.io/client-go/tools/remotecommand"
+    "k8s.io/client-go/rest"
+    "k8s.io/client-go/discovery"
 )
 
-//var cluster ClusterInfo
-//
-//func GetCluster() (ClusterInfo) {
-//    return cluster
-//}
 
 // Break this down into more functions
 // TODO: I dont like this functions name
@@ -44,11 +42,49 @@ func HandleDataUpdates() (ClusterInfo) {
         return cluster
     }
 
+
+    //get K8s distribution
+    cluster.Distribution, err = getDistribution(clientset, config)
+    if err != nil {
+        fmt.Println("Error getting distribution\n", err)
+        //TODO: dont reutrn cluster in error case
+        return cluster
+    }
+
+    // get kubernetes version
+    discovClient, err := discovery.NewDiscoveryClientForConfig(config)
+    if err != nil {
+        fmt.Println("Error getting discovery client\n", err)
+        //TODO: dont reutrn cluster in error case
+        return cluster
+    }
+    k8sVersion, err := discovClient.ServerVersion()
+    if err != nil {
+        fmt.Println("Error getting server version (GitVersion)\n", err)
+        //TODO: dont reutrn cluster in error case
+        return cluster
+    }
+    cluster.K8sVersion = k8sVersion.GitVersion
+
+    //TODO: combine range based for loops over nodes array
     //Count GPUs
     totalGPUs := 0
+    totalUnhealthy := 0
     for _, node := range cluster.Nodes {
-        totalGPUs = totalGPUs + node.AttachedGpus
+        totalGPUs = totalGPUs + node.AttachedGPUs
+        if node.NVSMIExitCode != 0 {
+            totalUnhealthy = totalUnhealthy + 1
+        }
     }
+    cluster.TotalGPUs = totalGPUs
+    cluster.NumUnhealthyNodes = totalUnhealthy
+
+    //Count NICs
+    totalNICs := 0
+    for _, node := range cluster.Nodes {
+        totalNICs = totalNICs + node.AttachedNICs
+    }
+    cluster.TotalNICs = totalNICs
 
     //Count GPU Type Distribution
     cluster.GPUDist = make(map[string]int)
@@ -68,7 +104,7 @@ func HandleDataUpdates() (ClusterInfo) {
     cluster.TotalMIG = 0
     for _, node := range cluster.Nodes {
         for _, GPU := range node.GPUs {
-            if GPU.MigMode.CurrentMig == "Enabled" {
+            if GPU.MIGInfo.MIGStatus == "Enabled" {
                 cluster.TotalMIG = cluster.TotalMIG + 1
             }
         }
@@ -85,26 +121,33 @@ func HandleDataUpdates() (ClusterInfo) {
     // update rest of cluster info
     cluster.NumNodes = len(cluster.Nodes)
     cluster.NodeNames = names
-    cluster.Distribution = "Dont know yet"
-    cluster.TotalGPUs = totalGPUs
     cluster.TimeUpdated = time.Now().Format("01-02-2006 15:04:05")
 
     // write to csv
 
-    csvFile, err := os.OpenFile("data.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-    if err != nil {
-        fmt.Print("failed creating csv file\n", err)
-        return cluster
-    }
-    defer csvFile.Close()
+    fmt.Println("printing")
+//    csvFile, err := os.OpenFile("data.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+//    if err != nil {
+//        fmt.Print("failed creating csv file\n", err)
+//        return cluster
+//    }
+//    defer csvFile.Close()
+//
+//    csvWriter := csv.NewWriter(csvFile)
+//    str, err := json.Marshal(cluster)
+//    row := []string{"timestamp here", string(str)}
+//    if err := csvWriter.Write(row); err != nil {
+//        fmt.Print("error writing to file\n", err)
+//        return cluster
+//    }
 
-    csvWriter := csv.NewWriter(csvFile)
-    str, err := json.Marshal(cluster)
-    row := []string{"timestamp here", string(str)}
-    if err := csvWriter.Write(row); err != nil {
+    str, err := json.MarshalIndent(cluster, "", "    ")
+    err = os.WriteFile("cluster.json",str, 0644)
+    if err != nil {
         fmt.Print("error writing to file\n", err)
         return cluster
     }
+    fmt.Println("DOne")
 
     return cluster
 }
@@ -134,7 +177,8 @@ func GetK8s() (*kubernetes.Clientset, *rest.Config, error) {
 }
 
 // get output from nvidia-smi
-func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName string) (string, error){
+func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config,
+              nodeName string, runMIG bool) (string, int, error){
     // find the driver daemonset associated with this node
     var podName string
     var podNamespace string
@@ -144,7 +188,7 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
                  metav1.ListOptions{ FieldSelector: "spec.nodeName=" + nodeName,})
     if err != nil {
         fmt.Println("Error getting pods")
-        return "", err
+        return "", 1, err
     }
     found := false
     for _, pod := range pods.Items {
@@ -157,13 +201,19 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
     }
     if !found {
         fmt.Println("Could not find nvidia driver daemondset pod")
-        return "", nil
+        return "", 1, nil
     }
 
     req := clientset.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
            Namespace(podNamespace).SubResource("exec")
+    var command []string
+    if runMIG {
+        command = []string{"/bin/bash", "-c", "nvidia-smi mig -lgip && echo -n $?"}
+    } else {
+        command = []string{"/bin/bash", "-c", "nvidia-smi -q -x && echo -n $?"}
+    }
     option := &corev1.PodExecOptions{
-        Command: []string{"nvidia-smi", "-q", "-x"},
+        Command: command,
         //TODO: confirm that it's always this container?
         Container: "nvidia-driver-ctr",
         Stdin:   false,
@@ -181,7 +231,7 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
     exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
     if err != nil {
         fmt.Println("Error creating executor for nvidia-smi")
-        return output, err
+        return output, 1, err
     }
 
     // get output as a string
@@ -194,10 +244,20 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
     })
     if err != nil {
         fmt.Println("Error getting output from command")
-        return output, err
+        return output, 1, err
     }
     output = buf.String()
-    return output, nil
+
+    // parse output for NVSMI output and exit code
+    idx := strings.LastIndex(output, "\n")
+    nvSMIout := output[0 : idx]
+    exitCode, err := strconv.Atoi(output[idx + 1 : len(output)])
+    if err != nil {
+        fmt.Println("Non-integer exit code\n")
+        return "", 1, err
+    }
+
+    return nvSMIout, exitCode, nil
 }
 
 func updateNodes(clientset *kubernetes.Clientset, config *rest.Config) ([]NodeInfo, error){
@@ -221,20 +281,70 @@ func updateNodes(clientset *kubernetes.Clientset, config *rest.Config) ([]NodeIn
         var info NodeInfo
         //populate instance with nodespec/status information
         info.OSVersion = node.Status.NodeInfo.OSImage
-        info.K8sVersion = node.Status.NodeInfo.KubeletVersion
+        info.OS = node.Status.NodeInfo.OperatingSystem
+        info.KubeletVersion = node.Status.NodeInfo.KubeletVersion
         info.ContainerRuntime = node.Status.NodeInfo.ContainerRuntimeVersion
         info.NodeName = node.Name
         // still have yet to find CSP
         //OutputStruct.Provider = (nodeList.Items)[nodeIndex].Spec.ProviderID
 
+        // find VM or bare metal by getting labels
+        labels := node.Labels
+        hyperLabel := "feature.node.kubernetes.io/cpu-cpuid.HYPERVISOR"
+        if value, _ := labels[hyperLabel]; value == "true" {
+            info.VMOrBareMetal = "VM"
+        } else {
+            info.VMOrBareMetal = "Bare Metal"
+        }
+
         //run NVSMI to populate rest of node
-        NVSMIOutput, err := runNVSMI(clientset, config, node.Name)
+        NVSMIOutput, exitCode, err := runNVSMI(clientset, config, node.Name, false)
         if err != nil {
             fmt.Println("Error running NVSMI")
             return nil, err
         }
         xmlOutput := []byte(NVSMIOutput)
         xml.Unmarshal(xmlOutput, &info)
+        info.NVSMIExitCode = exitCode
+
+        //Chop up GPU Names (for vgpu profiles)
+        for i, _ := range info.GPUs {
+            name := info.GPUs[i].ProductName
+            if dashIndex := strings.Index(name, "-"); dashIndex != -1 {
+                info.GPUs[i].ProductName = name[0 : dashIndex]
+                fields := strings.Fields(name)
+                info.GPUs[i].GpuVirtualizationMode.VGPUProfile = fields[len(fields) - 1]
+            }
+        }
+
+        // Get vgpu host driver
+        vGPUHostDriverLabel := "nvidia.com/vgpu.host-driver-version"
+        if value, present := labels[vGPUHostDriverLabel]; present {
+            info.VGPUHostDriver = value
+        } else {
+            info.VGPUHostDriver = "N/A"
+        }
+
+//        //run NVSMI again to get MIG Profiles
+//        //TODO: This just runs if GPU[0] has mig enabled
+//        //      but have to deal with multiple gpus
+//        if len(info.GPUs) > 0 {
+//            if info.GPUs[0].MIGInfo.MIGStatus == "Enabled" {
+//                info.MIGProfiles, exitCode, err = runNVSMI(clientset, config, node.Name, true)
+//                if err != nil {
+//                    fmt.Println("Error running nvidia-smi mig")
+//                    return nil, err
+//                }
+//            }
+//        }
+
+        //handle Mellanox NICs
+        info.NICs, err = readNICs(clientset, config, node.Name)
+        if err != nil {
+            fmt.Println("Error reading NICs")
+            return nodes, err
+        }
+        info.AttachedNICs = len(info.NICs)
 
         //append to nodes
         nodes = append(nodes, info)
@@ -242,4 +352,122 @@ func updateNodes(clientset *kubernetes.Clientset, config *rest.Config) ([]NodeIn
 
     //return nodes
     return nodes, nil
+}
+
+func getDistribution(clientset *kubernetes.Clientset, config *rest.Config) (string, error){
+    //get list of all nodes
+    nodeList, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+    if err != nil {
+        fmt.Println("Error in getting list of cluster.Nodes")
+        return "", err
+    }
+
+    //only need to check one node
+    labels := nodeList.Items[0].Labels
+
+    // distributions to try to detect:
+    distributions      := []string{"Tanzu", "OpenShift", "K3s", "RKE"}
+    distributionsLower := []string{"tanzu", "openshift", "k3s", "rke"}
+
+    // grep style search for distribution
+    var match string
+    for idx, distribution := range distributionsLower {
+        for label, _ := range labels {
+            if strings.Contains(label, distribution) {
+                //found a match
+                match = distributions[idx]
+            }
+        }
+    }
+
+    // If no match, it's standard distribution
+    if match == "" {
+        match = "Standard"
+    }
+    return match, nil
+}
+
+func readNICs(clientset *kubernetes.Clientset, config *rest.Config, nodeName string) ([]string, error) {
+    // find the mofed pod associated with this node
+    var podName string
+    var podNamespace string
+    var NICs []string
+    pods, err := clientset.CoreV1().Pods("").List(context.TODO(),
+                 metav1.ListOptions{ FieldSelector: "spec.nodeName=" + nodeName,})
+    if err != nil {
+        fmt.Println("Error getting pods")
+        return NICs, err
+    }
+    found := false
+    for _, pod := range pods.Items {
+        if strings.HasPrefix(pod.Name, "mofed") {
+            podName = pod.Name
+            podNamespace = pod.Namespace
+            found = true
+            break
+        }
+    }
+    if !found {
+        //no mellanox NICs on cluster
+        return NICs, nil
+    }
+
+    // if found, we have Mellanox NICS, so run lspci
+
+    req := clientset.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
+           Namespace(podNamespace).SubResource("exec")
+    option := &corev1.PodExecOptions{
+        Command: []string{"lspci"},
+        Stdin:   false,
+        Stdout:  true,
+        Stderr:  true,
+        TTY:     false,
+    }
+    req.VersionedParams(
+        option,
+        scheme.ParameterCodec,
+    )
+
+    // execute lspci command
+    var output string
+    exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+    if err != nil {
+        fmt.Println("Error creating executor for lspci")
+        return NICs, err
+    }
+
+    // get output as a string
+    buf := new(bytes.Buffer)
+    err = exec.Stream(remotecommand.StreamOptions{
+        Stdin:  os.Stdin,
+        Stdout: buf,
+        Stderr: nil,
+        Tty: false,
+    })
+    if err != nil {
+        fmt.Println("Error getting output from lspci command")
+        return NICs, err
+    }
+    output = buf.String()
+    scanner := bufio.NewScanner(strings.NewReader(output))
+    inserted := make(map[string]bool)
+    for scanner.Scan() {
+        line := scanner.Text()
+        if !strings.Contains(line, "Mellanox") {
+            continue
+        }
+        // get first 5 chars: "xx:xx" this is bus num:device num
+        cardID := line[0:5]
+        if _, ok := inserted[cardID]; !ok {
+            //if device is not inserted:
+            inserted[cardID] = true
+
+            //get card name
+            name := line[strings.Index(line, "Mellanox"):len(line)]
+            NICs = append(NICs, name)
+        }
+    }
+
+
+    return NICs, nil
 }
