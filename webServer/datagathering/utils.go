@@ -367,7 +367,7 @@ func getDistribution(clientset *kubernetes.Clientset, config *rest.Config) (stri
 
     // distributions to try to detect:
     distributions      := []string{"Tanzu", "OpenShift", "K3s", "RKE"}
-    distributionsLower := []string{"tanzu", "openshift", "k3s", "rke"}
+    distributionsLower := []string{"tanzu", "openshift", "k3s", ".rke."}
 
     // grep style search for distribution
     var match string

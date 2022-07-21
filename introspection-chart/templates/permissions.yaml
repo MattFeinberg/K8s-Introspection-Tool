@@ -2,26 +2,17 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:   
   name: introspection-serviceaccount
-  namespace: introspection-resources
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: service-node-reader
-rules:
-- apiGroups: [""] # "" indicates the core API group
-  resources: ["services", "nodes", "pods", "pods/exec"]
-  verbs: ["get", "watch", "list", "create"]
+  namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: read-nodes-services-global
+  name: admin-binding
 subjects:
 - kind: ServiceAccount
   name: introspection-serviceaccount
-  namespace: introspection-resources
+  namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: service-node-reader
+  name: cluster-admin
   apiGroup: rbac.authorization.k8s.io

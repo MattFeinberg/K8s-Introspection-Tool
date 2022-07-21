@@ -31,7 +31,7 @@ GPU Type Distribution:
     var dist = {{.GPUDist}}
     var gpuTypes = document.getElementById("gpuTypes");
     for (const [type, count] of Object.entries(dist)) {
-        var text = document.createTextNode(type + ": " + count);
+        var text = document.createTextNode(type + ": " + count + "\n");
         gpuTypes.appendChild(text);
     }
     var names = {{.NodeNames}}

@@ -45,6 +45,8 @@ Exit Code from NVSMI: {{.Node.NVSMIExitCode}}<br>
             tag.appendChild(text);
             text = document.createTextNode("GPU Part Number: " + GPUs[i].GPUPartNumber + "\n");
             tag.appendChild(text);
+            text = document.createTextNode("GPU Serial Number: " + GPUs[i].GPUSerialNumber + "\n");
+            tag.appendChild(text);
             text = document.createTextNode("FB Memory Size: " + GPUs[i].FbMemoryUsage.Total + "\n");
             tag.appendChild(text);
             text = document.createTextNode("GSP Firmware Version: " + GPUs[i].GSPFirmwareVersion + "\n");
@@ -75,6 +77,14 @@ Exit Code from NVSMI: {{.Node.NVSMIExitCode}}<br>
                     text = document.createTextNode("Instance ID: " + MIGs[j].GPUInstanceID);
                     profileHeader.appendChild(text);
                     tag.appendChild(profileHeader);
+                    text = document.createTextNode("Copy Engine Count: " +
+                                                   MIGs[j].DeviceAttributes.Shared.CopyEngineCount + "\n")
+                    tag.appendChild(text);
+                    text = document.createTextNode("Multiprocessor Count: " + MIGs[j].FbMemoryUsage.Total + "\n")
+                    tag.appendChild(text);
+                    text = document.createTextNode("FB Memory Total: " +
+                                                   MIGs[j].DeviceAttributes.Shared.CopyEngineCount + "\n")
+                    tag.appendChild(text);
                 }
             }
             element.appendChild(tag);

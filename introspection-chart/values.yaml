@@ -1,8 +1,3 @@
-prometheusEnabled: false
-grafanaEnabled: false
-# Refresh Rate measured in hours
-refreshRate: 1
-
 telemetry: true
 
 kube-prometheus-stack:
@@ -10,7 +5,6 @@ kube-prometheus-stack:
     service:
       type: NodePort
     prometheusSpec:
-      serviceMonitorSelectorNilUsesHelmValues: false
       additionalScrapeConfigs:
 
       - job_name: 'kubernetes-service-endpoints'
@@ -129,7 +123,7 @@ kube-prometheus-stack:
                   "bars": false,
                   "dashLength": 10,
                   "dashes": false,
-                  "datasource": "${DS_PROMETHEUS}",
+                  "datasource": "Prometheus",
                   "fill": 1,
                   "fillGradient": 0,
                   "gridPos": {
@@ -216,7 +210,7 @@ kube-prometheus-stack:
                   }
                 },
                 {
-                  "datasource": "${DS_PROMETHEUS}",
+                  "datasource": "Prometheus",
                   "gridPos": {
                     "h": 8,
                     "w": 6,
@@ -281,7 +275,7 @@ kube-prometheus-stack:
                   "bars": false,
                   "dashLength": 10,
                   "dashes": false,
-                  "datasource": "${DS_PROMETHEUS}",
+                  "datasource": "Prometheus",
                   "fill": 1,
                   "fillGradient": 0,
                   "gridPos": {
@@ -369,7 +363,7 @@ kube-prometheus-stack:
                 },
                 {
                   "cacheTimeout": null,
-                  "datasource": "${DS_PROMETHEUS}",
+                  "datasource": "Prometheus",
                   "gridPos": {
                     "h": 8,
                     "w": 6,
@@ -436,7 +430,7 @@ kube-prometheus-stack:
                   "bars": false,
                   "dashLength": 10,
                   "dashes": false,
-                  "datasource": "${DS_PROMETHEUS}",
+                  "datasource": "Prometheus",
                   "fill": 1,
                   "fillGradient": 0,
                   "gridPos": {
@@ -531,7 +525,7 @@ kube-prometheus-stack:
                   "bars": false,
                   "dashLength": 10,
                   "dashes": false,
-                  "datasource": "${DS_PROMETHEUS}",
+                  "datasource": "Prometheus",
                   "fill": 1,
                   "fillGradient": 0,
                   "gridPos": {
@@ -621,7 +615,7 @@ kube-prometheus-stack:
                   "bars": false,
                   "dashLength": 10,
                   "dashes": false,
-                  "datasource": "${DS_PROMETHEUS}",
+                  "datasource": "Prometheus",
                   "fill": 1,
                   "fillGradient": 0,
                   "gridPos": {
@@ -710,7 +704,7 @@ kube-prometheus-stack:
                   "bars": false,
                   "dashLength": 10,
                   "dashes": false,
-                  "datasource": "${DS_PROMETHEUS}",
+                  "datasource": "Prometheus",
                   "fill": 1,
                   "fillGradient": 0,
                   "gridPos": {
@@ -805,7 +799,7 @@ kube-prometheus-stack:
                   {
                     "allValue": null,
                     "current": {},
-                    "datasource": "${DS_PROMETHEUS}",
+                    "datasource": "Prometheus",
                     "definition": "label_values(DCGM_FI_DEV_GPU_TEMP, instance)",
                     "hide": 0,
                     "includeAll": false,
@@ -827,7 +821,7 @@ kube-prometheus-stack:
                   {
                     "allValue": null,
                     "current": {},
-                    "datasource": "${DS_PROMETHEUS}",
+                    "datasource": "Prometheus",
                     "definition": "label_values(gpu)",
                     "hide": 0,
                     "includeAll": true,

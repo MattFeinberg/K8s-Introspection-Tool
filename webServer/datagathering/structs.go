@@ -3,9 +3,9 @@ package datagathering
 
 //CLUSTER STRUCT
 type ClusterInfo struct {
-    K8sVersion           string
+    K8sVersion        string
     NumNodes          int
-    // TODO: extra storing names!
+    // TODO: extra storing names here, but mayeb its useful
     NodeNames         []string
     NumUnhealthyNodes int
     Distribution      string
@@ -28,7 +28,6 @@ type NodeInfo struct {
     VMOrBareMetal    string
     KubeletVersion   string
     ContainerRuntime string
-    NumGPUs          string
     DriverVersion    string   `xml:"driver_version"`
     CudaVersion      string   `xml:"cuda_version"`
     AttachedGPUs     int      `xml:"attached_gpus"`
@@ -39,11 +38,29 @@ type NodeInfo struct {
     //TODO: This is GPU-level, I ahve it at node level rn
     //MIGProfiles      string
     GPUs             []struct{
-        ProductName         string `xml:"product_name"`
-        MIGInfo             struct {
-            MIGStatus  string `xml:"current_mig"`
+        ProductName           string `xml:"product_name"`
+        GPUPartNumber         string `xml:"gpu_part_number"`
+        GPUSerialNumber       string `xml:"serial"`
+        GSPFirmwareVersion    string `xml:"gsp_firmware_version"`
+        GpuVirtualizationMode struct {
+            VirtualizationMode string `xml:"virtualization_mode"`
+            VGPUProfile        string
+        } `xml:"gpu_virtualization_mode"`
+        FbMemoryUsage         struct {
+            Total    string `xml:"total"`
+            Reserved string `xml:"reserved"`
+            Used     string `xml:"used"`
+            Free     string `xml:"free"`
+        } `xml:"fb_memory_usage"`
+        Bar1MemoryUsage       struct {
+            Total string `xml:"total"`
+            Used  string `xml:"used"`
+            Free  string `xml:"free"`
+        } `xml:"bar1_memory_usage"`
+        MIGInfo               struct {
+            MIGStatus string `xml:"current_mig"`
         } `xml:"mig_mode"`
-        MIGDevices struct {
+        MIGDevices            struct {
             MIGDevice []struct {
                 GPUInstanceID     string `xml:"gpu_instance_id"`
                 ComputeInstanceID string `xml:"compute_instance_id"`
@@ -57,36 +74,19 @@ type NodeInfo struct {
                         JpgCount            string `xml:"jpg_count"`
                     } `xml:"shared"`
                 } `xml:"device_attributes"`
-                FbMemoryUsage struct {
+                FbMemoryUsage     struct {
                     Total    string `xml:"total"`
                     Reserved string `xml:"reserved"`
                     Used     string `xml:"used"`
                     Free     string `xml:"free"`
                 } `xml:"fb_memory_usage"`
-                Bar1MemoryUsage struct {
+                Bar1MemoryUsage   struct {
                     Total string `xml:"total"`
                     Used  string `xml:"used"`
                     Free  string `xml:"free"`
                 } `xml:"bar1_memory_usage"`
             } `xml:"mig_device"`
         } `xml:"mig_devices"`
-        GPUPartNumber  string `xml:"gpu_part_number"`
-        GSPFirmwareVersion    string `xml:"gsp_firmware_version"`
-        GpuVirtualizationMode struct {
-            VirtualizationMode string `xml:"virtualization_mode"`
-            VGPUProfile        string
-        } `xml:"gpu_virtualization_mode"`
-        FbMemoryUsage struct {
-            Total    string `xml:"total"`
-            Reserved string `xml:"reserved"`
-            Used     string `xml:"used"`
-            Free     string `xml:"free"`
-        } `xml:"fb_memory_usage"`
-        Bar1MemoryUsage struct {
-            Total string `xml:"total"`
-            Used  string `xml:"used"`
-            Free  string `xml:"free"`
-        } `xml:"bar1_memory_usage"`
     } `xml:"gpu"`
 }
 

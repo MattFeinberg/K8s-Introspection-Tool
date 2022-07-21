@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: introspection-web
-  namespace: introspection-resources
+  namespace: {{ .Release.Namespace }}
   labels:
     app: introspection-web
 spec:
@@ -31,7 +31,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: introspection-web-np
-  namespace: introspection-resources
+  namespace: {{ .Release.Namespace }}
 spec:
   type: NodePort
   ports:
