@@ -51,6 +51,14 @@ func HandleDataUpdates() (ClusterInfo) {
         return cluster
     }
 
+    //get cloud info
+    cluster.CloudOrOnPrem, cluster.CSP, err = getCloudInfo(clientset, config)
+    if err != nil {
+        fmt.Println("Error getting cloud info\n", err)
+        //TODO: dont reutrn cluster in error case
+        return cluster
+    }
+
     // get kubernetes version
     discovClient, err := discovery.NewDiscoveryClientForConfig(config)
     if err != nil {
@@ -125,7 +133,7 @@ func HandleDataUpdates() (ClusterInfo) {
 
     // write to csv
 
-    fmt.Println("printing")
+
 //    csvFile, err := os.OpenFile("data.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 //    if err != nil {
 //        fmt.Print("failed creating csv file\n", err)
@@ -141,6 +149,7 @@ func HandleDataUpdates() (ClusterInfo) {
 //        return cluster
 //    }
 
+    fmt.Println("printing")
     str, err := json.MarshalIndent(cluster, "", "    ")
     err = os.WriteFile("cluster.json",str, 0644)
     if err != nil {
@@ -200,6 +209,7 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config,
         }
     }
     if !found {
+        //TODO: indicate here this just means no GPUs on this node
         fmt.Println("Could not find nvidia driver daemondset pod")
         return "", 1, nil
     }
@@ -294,6 +304,7 @@ func updateNodes(clientset *kubernetes.Clientset, config *rest.Config) ([]NodeIn
         if value, _ := labels[hyperLabel]; value == "true" {
             info.VMOrBareMetal = "VM"
         } else {
+            //TODO: this also gets set if label isn't present - is that right?
             info.VMOrBareMetal = "Bare Metal"
         }
 
@@ -385,6 +396,28 @@ func getDistribution(clientset *kubernetes.Clientset, config *rest.Config) (stri
         match = "Standard"
     }
     return match, nil
+}
+
+func getCloudInfo(clientset *kubernetes.Clientset, config *rest.Config) (string, string, error) {
+    //get list of all nodes
+    nodeList, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+    if err != nil {
+        fmt.Println("Error in getting list of cluster.Nodes")
+        return "", "", err
+    }
+
+    //only need to check one node
+    anns := nodeList.Items[0].Annotations
+
+    // grep style search for "cloud"
+    for ann, _ := range anns {
+        if strings.Contains(ann, "cloud") || strings.Contains(ann, "Cloud"){
+            return "Cloud", nodeList.Items[0].Spec.ProviderID, nil
+        }
+    }
+
+    // if we reach here without returning, no cloud detected
+    return "On Prem", "N/A", nil
 }
 
 func readNICs(clientset *kubernetes.Clientset, config *rest.Config, nodeName string) ([]string, error) {

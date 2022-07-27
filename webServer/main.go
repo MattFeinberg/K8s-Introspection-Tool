@@ -14,7 +14,8 @@ import (
         web "introspec-proj/webServer/webhosting"
         "net/http"
         "time"
-       )
+        "fmt"
+)
 
 func main() {
     // initial data gathering
@@ -22,7 +23,7 @@ func main() {
     cluster := data.HandleDataUpdates()
 
     // periodic data gathering
-    ticker := time.NewTicker(1 * time.Minute)
+    ticker := time.NewTicker(3 * time.Hour)
     quit := make(chan struct{})
     go func() {
         for {
@@ -37,6 +38,7 @@ func main() {
         }
      }()
 
+    fmt.Println("starting web server")
     http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
     handleFunc := web.BuildHandleFunc(&cluster)
     http.HandleFunc("/", handleFunc)

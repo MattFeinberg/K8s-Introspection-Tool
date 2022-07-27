@@ -80,10 +80,11 @@ Exit Code from NVSMI: {{.Node.NVSMIExitCode}}<br>
                     text = document.createTextNode("Copy Engine Count: " +
                                                    MIGs[j].DeviceAttributes.Shared.CopyEngineCount + "\n")
                     tag.appendChild(text);
-                    text = document.createTextNode("Multiprocessor Count: " + MIGs[j].FbMemoryUsage.Total + "\n")
+                    text = document.createTextNode("Multiprocessor Count: " +
+                                                   MIGs[j].DeviceAttributes.Shared.MultiprocessorCount + "\n")
                     tag.appendChild(text);
                     text = document.createTextNode("FB Memory Total: " +
-                                                   MIGs[j].DeviceAttributes.Shared.CopyEngineCount + "\n")
+                                                   MIGs[j].FbMemoryUsage.Total + "\n")
                     tag.appendChild(text);
                 }
             }

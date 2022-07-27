@@ -4,6 +4,8 @@ package datagathering
 //CLUSTER STRUCT
 type ClusterInfo struct {
     K8sVersion        string
+    CloudOrOnPrem     string
+    CSP               string
     NumNodes          int
     // TODO: extra storing names here, but mayeb its useful
     NodeNames         []string
