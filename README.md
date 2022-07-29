@@ -1,23 +1,23 @@
 <div id="top"></div>
 
 <h3 align="center">Kubernetes Cluster Introspection Tool</h3>
+
 ### Note: README is unfinished
-  <p align="center">
-    This tool allows you to gather a detailed inventory on a GPU-equipped Kubernetes cluster. You can deploy the tool through a helm chart, and view the cluster inventory via HTTP or through a generated JSON file.
-  </p>
+
+<p align="center">
+This tool allows you to gather a detailed inventory on a GPU-equipped Kubernetes cluster. You can deploy the tool through a helm chart, and view the cluster inventory via HTTP or through a generated JSON file.
+</p>
 </div>
 
 
 
 <!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li><a href="#prerequisites">Prerequisites</a></li>
-    <li><a href="#installation">Installation</a></li>
-    <li><a href="#usage">Usage</a></li>
-  </ol>
-</details>
+## Table of Contents
+<ol>
+  <li><a href="#prerequisites">Prerequisites</a></li>
+  <li><a href="#installation">Installation</a></li>
+  <li><a href="#usage">Usage</a></li>
+</ol>
 
 ## Prerequisites
 
