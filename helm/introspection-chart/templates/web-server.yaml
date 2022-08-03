@@ -18,11 +18,11 @@ spec:
       containers:
       - name: introspection-web-server
         image: mfeinb02/introspection-web-server:latest
-        {{ if .Values.telemetry }}
         env:
-        - name: TELEMETRY
-          value: "true"
-        {{ end }}
+        - name: RATE
+          value: "{{ .Values.rate }}"
+        - name: WEB
+          value: "{{ .Values.web }}"
         ports:
         - containerPort: 8000
       serviceAccountName: introspection-serviceaccount
@@ -38,6 +38,6 @@ spec:
   - name: http
     port: 9090
     targetPort: 8000
-    nodePort: 30069
+    nodePort: {{ .Values.nodePort }}
   selector:
     app: introspection-web
