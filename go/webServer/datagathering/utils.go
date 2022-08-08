@@ -3,7 +3,7 @@ package datagathering
 import(
     "time"
     "fmt"
-    //"encoding/csv"
+    "encoding/csv"
     "encoding/json"
     "strings"
     "strconv"
@@ -150,9 +150,20 @@ func HandleDataUpdates() (ClusterInfo) {
 //    }
 
     fmt.Println("printing")
-    str, err := json.MarshalIndent(cluster, "", "    ")
-    err = os.WriteFile("cluster.json",str, 0644)
+    file, err := os.OpenFile("data.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
     if err != nil {
+        fmt.Print("failed creating csv file\n", err)
+        return cluster
+    }
+    defer file.Close()
+    csvWriter := csv.NewWriter(file)
+    str, err := json.MarshalIndent(cluster, "", "    ")
+    if err != nil {
+        fmt.Print("error reading json\n", err)
+        return cluster
+    }
+    row := []string{"timestamp here", string(str)}
+    if err := csvWriter.Write(row); err != nil {
         fmt.Print("error writing to file\n", err)
         return cluster
     }

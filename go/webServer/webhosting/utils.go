@@ -6,7 +6,6 @@ import(
     "fmt"
     "net/http"
     "html/template"
-    "os"
     "strconv"
     "context"
     "k8s.io/client-go/kubernetes"
@@ -91,7 +90,7 @@ func executeIndex(w http.ResponseWriter, r *http.Request, clientset *kubernetes.
     nodeIP := nodeList.Items[0].Status.Addresses[0].Address
 
     IPs :=  TelemetryIPs{TelemetryEnabled: false,}
-    if os.Getenv("TELEMETRY") == "true" {
+    if false {
         IPs.TelemetryEnabled = true
         IPs.PrometheusIP = "http://" + nodeIP + ":30090"
         IPs.GrafanaIP = "http://" + nodeIP + ":32322"

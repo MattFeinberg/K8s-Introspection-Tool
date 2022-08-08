@@ -12,8 +12,10 @@ package main
 import (
         data "introspec-proj/webServer/datagathering"
         web "introspec-proj/webServer/webhosting"
+        "os"
         "net/http"
         "time"
+        "strconv"
         "fmt"
 )
 
@@ -23,7 +25,13 @@ func main() {
     cluster := data.HandleDataUpdates()
 
     // periodic data gathering
-    ticker := time.NewTicker(3 * time.Hour)
+    var rate int
+    rate, err := strconv.Atoi(os.Getenv("RATE"))
+    if err != nil {
+        fmt.Println("Error reading rate variable as integer")
+    }
+    // default rate is 24 (hours)
+    ticker := time.NewTicker(time.Duration(rate) * time.Hour)
     quit := make(chan struct{})
     go func() {
         for {
@@ -38,11 +46,10 @@ func main() {
         }
      }()
 
-    fmt.Println("starting web server")
     http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
-    handleFunc := web.BuildHandleFunc(&cluster)
-    http.HandleFunc("/", handleFunc)
-    http.ListenAndServe(":8000", nil)
+    //handleFunc := web.BuildHandleFunc(&cluster)
+    //http.HandleFunc("/", handleFunc)
+    //http.ListenAndServe(":8000", nil)
 }
 
 

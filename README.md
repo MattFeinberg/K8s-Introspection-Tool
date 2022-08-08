@@ -4,7 +4,7 @@
 
 ### Note: README is unfinished
 
-<p align="center">
+<p align="left">
 This tool allows you to gather a detailed inventory on a GPU-equipped Kubernetes cluster. You can deploy the tool through a helm chart, and view the cluster inventory via HTTP or through a generated JSON file.
 </p>
 </div>
@@ -21,7 +21,7 @@ This tool allows you to gather a detailed inventory on a GPU-equipped Kubernetes
 
 ## Prerequisites
 
-Before installing, ensure that the NVIDIA GPU Operator is installed and running smoothly on your cluster. More info on the GPU Operator can be found here: https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/overview.html
+Before installing, ensure that the NVIDIA GPU Operator is installed and running smoothly on your cluster. More info on the GPU Operator can be found [here](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/overview.html)
 
 ## Installation
 
@@ -42,8 +42,6 @@ Before installing, ensure that the NVIDIA GPU Operator is installed and running 
 ## Usage
 
 The cluster inventory web interface, if enabled through helm, is availible after installation at <machine-ip>:30069, or at the specified NodePort at installation.
-
-
 
 
 
