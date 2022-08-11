@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  introspection-chart:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-08-11T20:23:43.04490371Z"
+    description: A Helm chart to deploy a Kubernetes cluster introspection tool
+    digest: 48a2a95783a3741287b994743e16a9c3ffe7e905ed9df68b16f715f8bd5a7ad7
+    name: introspection-chart
+    type: application
+    urls:
+    - https://MattFeinberg.github.io/helm/introspection-chart-0.1.0.tgz
+    version: 0.1.0
+generated: "2022-08-11T20:23:43.041304418Z"
