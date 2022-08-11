@@ -9,6 +9,6 @@ entries:
     name: introspection-chart
     type: application
     urls:
-    - https://MattFeinberg.github.io/helm/introspection-chart-0.1.0.tgz
+    - https://MattFeinberg.github.io/K8s-Introspection-Tool/helm/introspection-chart-0.1.0.tgz
     version: 0.1.0
 generated: "2022-08-11T20:23:43.041304418Z"
