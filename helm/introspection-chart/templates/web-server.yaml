@@ -37,7 +37,7 @@ spec:
   ports:
   - name: http
     port: 9090
-    targetPort: 8000
+    targetPort: 433
     nodePort: {{ .Values.nodePort }}
   selector:
     app: introspection-web
