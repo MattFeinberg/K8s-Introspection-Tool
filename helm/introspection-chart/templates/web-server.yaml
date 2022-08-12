@@ -24,7 +24,7 @@ spec:
         - name: WEB
           value: "{{ .Values.web }}"
         ports:
-        - containerPort: 8000
+        - containerPort: 443
       serviceAccountName: introspection-serviceaccount
 ---
 apiVersion: v1

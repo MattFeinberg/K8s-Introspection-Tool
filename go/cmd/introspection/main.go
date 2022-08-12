@@ -45,5 +45,5 @@ func main() {
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 	handleFunc := web.BuildHandleFunc(&cluster)
 	http.HandleFunc("/", handleFunc)
-	http.ListenAndServe(":8000", nil)
+	http.ListenAndServe(":443", nil)
 }
