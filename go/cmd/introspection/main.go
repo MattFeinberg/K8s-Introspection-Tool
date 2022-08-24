@@ -52,10 +52,11 @@ func main() {
 	}
 
     if deployWeb {
+        fmt.Println("Hosting Web")
     	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
     	handleFunc := web.BuildHandleFunc(&cluster)
     	http.HandleFunc("/", handleFunc)
-    	http.ListenAndServe(":443", nil)
+    	http.ListenAndServe(":8080", nil)
     }
     wg.Wait()
 }
