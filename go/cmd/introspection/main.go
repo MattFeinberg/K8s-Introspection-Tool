@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+    "sync"
 	"time"
 )
 
@@ -28,22 +29,33 @@ func main() {
 	}
 	// default rate is 24 (hours)
 	ticker := time.NewTicker(time.Duration(rate) * time.Hour)
-	quit := make(chan struct{})
+	quit := make(chan bool)
+    var wg sync.WaitGroup
+    wg.Add(1)
 	go func() {
-		for {
+        running := true
+		for running {
 			select {
 			case <-ticker.C:
-				// do stuff
 				cluster = data.HandleDataUpdates()
 			case <-quit:
-				ticker.Stop()
-				return
+				running = false
+                ticker.Stop()
 			}
 		}
+        wg.Done()
 	}()
 
-	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
-	handleFunc := web.BuildHandleFunc(&cluster)
-	http.HandleFunc("/", handleFunc)
-	http.ListenAndServe(":443", nil)
+	deployWeb, err := strconv.ParseBool(os.Getenv("WEB"))
+	if err != nil {
+		fmt.Println("Error reading web variable as bool")
+	}
+
+    if deployWeb {
+    	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
+    	handleFunc := web.BuildHandleFunc(&cluster)
+    	http.HandleFunc("/", handleFunc)
+    	http.ListenAndServe(":443", nil)
+    }
+    wg.Wait()
 }

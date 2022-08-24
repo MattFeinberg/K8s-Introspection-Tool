@@ -41,6 +41,8 @@ func HandleDataUpdates() ClusterInfo {
 		return cluster
 	}
 
+    //TODO: Put the below in a function (to get cluster level data)
+
 	//get K8s distribution
 	cluster.Distribution, err = getDistribution(clientset, config)
 	if err != nil {
@@ -131,8 +133,10 @@ func HandleDataUpdates() ClusterInfo {
 
 	// write to csv
 
+    path := os.Getenv("FILEPATH")
+
 	fmt.Println("printing")
-	file, err := os.OpenFile("data.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Print("failed creating csv file\n", err)
 		return cluster
@@ -370,6 +374,7 @@ func getDistribution(clientset *kubernetes.Clientset, config *rest.Config) (stri
 		match = "Standard"
 	} else if matches > 1 {
 		// multiple distributions detected, cant confirm one
+        //TODO: report the two that it found
 		match = "Unknown"
 	}
 	return match, nil

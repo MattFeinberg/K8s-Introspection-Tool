@@ -1,3 +1,4 @@
-web: false
+web: true
 rate: 24
 nodePort: 30069
+path: "inventory.csv"
