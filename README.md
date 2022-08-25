@@ -2,7 +2,7 @@
 
 <h3 align="center">Kubernetes Cluster Introspection Tool</h3>
 
-The purpose of this tool is to capture a detailed cluster inventory, including GPU data, package it into a transportable file/data structure, and make this information easily accessible. This tool is compatible with various Kubernetes deployment options (on prem, cloud, OpenShift, Tanzu, etc.), as well as many GPU configurations (vGPU, MIG, etc.). A more detailed design spec for this application can be found [here](https://docs.google.com/document/d/1vIZLLR46bY93l-tIpZa80LSDiUh_eNs7EQirZhB1Bx8/edit?usp=sharing)
+The purpose of this tool is to capture a detailed cluster inventory, including GPU data, package it into a transportable file/data structure, and make this information easily accessible. This tool is compatible with various Kubernetes deployment options (on prem, cloud, OpenShift, Tanzu, etc.), as well as many GPU configurations (vGPU, MIG, etc.). A more detailed design spec for this application can be found [here](https://docs.google.com/document/d/1vIZLLR46bY93l-tIpZa80LSDiUh_eNs7EQirZhB1Bx8/edit?usp=sharing).
 </div>
 
 
@@ -17,7 +17,7 @@ The purpose of this tool is to capture a detailed cluster inventory, including G
 
 ## Prerequisites
 
-Before installing, ensure that the NVIDIA GPU Operator is installed and running smoothly on your cluster. More info on the GPU Operator can be found [here](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/overview.html)
+Before installing, ensure that the NVIDIA GPU Operator is installed and running smoothly on your cluster. More info on the GPU Operator can be found [here](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/overview.html).
 
 ## Installation
 
@@ -35,8 +35,7 @@ Various options can be specified at installation time through helm:
 
 1. Add Helm Repo
    ```sh
-   helm repo add introspection \
-   https://mattfeinberg.github.io/K8s-Introspection-Tool/helm/
+   helm repo add introspection https://mattfeinberg.github.io/K8s-Introspection-Tool/helm/
    helm repo update
 
    ```
@@ -45,7 +44,7 @@ Various options can be specified at installation time through helm:
    helm install introspec-tool introspection/introspection-chart \
    --create-namespace --namespace monitoring
    ```
-This will use the default installation settings, but you can customize your installation by adding --set <variable>=<value> to the end of the installation command. This command will also deploy the introspection application in the monitoring namespace, and will create the namespace if it does not already exist. There are no restrictions on this, so feel free to deploy in another namespace if desired.
+This will use the default installation settings, but you can customize your installation by adding `--set <variable>=<value>` to the end of the installation command. This command will also deploy the introspection application in the monitoring namespace, and will create the namespace if it does not already exist. There are no restrictions on this, so feel free to deploy in another namespace if desired.
 
 <!-- USAGE EXAMPLES -->
 ## Usage
