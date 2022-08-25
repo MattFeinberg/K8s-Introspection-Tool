@@ -28,7 +28,7 @@ func main() {
 		fmt.Println("Error reading rate variable as integer")
 	}
 	// default rate is 24 (hours)
-	ticker := time.NewTicker(time.Duration(rate) * time.Hour)
+	ticker := time.NewTicker(time.Duration(rate) * time.Second)
 	quit := make(chan bool)
     var wg sync.WaitGroup
     wg.Add(1)

@@ -141,20 +141,20 @@ func HandleDataUpdates() ClusterInfo {
 		fmt.Print("failed creating csv file\n", err)
 		return cluster
 	}
-	defer file.Close()
 	csvWriter := csv.NewWriter(file)
 	str, err := json.MarshalIndent(cluster, "", "    ")
 	if err != nil {
 		fmt.Print("error reading json\n", err)
 		return cluster
 	}
-	row := []string{"timestamp here", string(str)}
+	row := []string{cluster.TimeUpdated, string(str)}
 	if err := csvWriter.Write(row); err != nil {
 		fmt.Print("error writing to file\n", err)
 		return cluster
 	}
 	fmt.Println("DOne")
-
+    csvWriter.Flush()
+	file.Close()
 	return cluster
 }
 

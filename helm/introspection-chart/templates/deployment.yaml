@@ -25,10 +25,13 @@ spec:
           value: "{{ .Values.web }}"
         - name: FILEPATH
           value: "{{ .Values.path }}"
+{{ if .Values.web }}
         ports:
         - containerPort: 8080
+{{ end }}
       serviceAccountName: introspection-serviceaccount
 ---
+{{ if .Values.web }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -43,3 +46,4 @@ spec:
     nodePort: {{ .Values.nodePort }}
   selector:
     app: introspection-tool
+{{ end }}
