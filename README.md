@@ -49,7 +49,7 @@ This will use the default installation settings, but you can customize your inst
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-To access the cluster inventory web page (if enabled), naviagte to <machine-IP>:<nodePort> on your web browser, where <machine-IP> is the IP address of any node. The default NodePort value is 30069.
+To access the cluster inventory web page (if enabled), naviagte to http://machine-IP:nodePort on your web browser, where machine-IP is the IP address of any node. The default NodePort value is 30069.
 
 To access the cluster inventory data file, run:
 
