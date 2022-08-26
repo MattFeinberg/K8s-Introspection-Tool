@@ -22,14 +22,12 @@ import (
 )
 
 // HandleDataUpdates scrapes all cluster data
-// Break this down into more functions
-// TODO: I dont like this functions name
 func HandleDataUpdates() ClusterInfo {
+    // connect to kubernetes
 	var cluster ClusterInfo
 	clientset, config, err := GetK8s()
 	if err != nil {
 		fmt.Println("Error getting K8s info", err)
-		//TODO: dont reutrn cluster in error case
 		return cluster
 	}
 
@@ -37,7 +35,6 @@ func HandleDataUpdates() ClusterInfo {
 	cluster.Nodes, err = updateNodes(clientset, config)
 	if err != nil {
 		fmt.Println("Error updating nodes\n", err)
-		//TODO: dont reutrn cluster in error case
 		return cluster
 	}
 
@@ -47,7 +44,6 @@ func HandleDataUpdates() ClusterInfo {
 	cluster.Distribution, err = getDistribution(clientset, config)
 	if err != nil {
 		fmt.Println("Error getting distribution\n", err)
-		//TODO: dont reutrn cluster in error case
 		return cluster
 	}
 
@@ -55,7 +51,6 @@ func HandleDataUpdates() ClusterInfo {
 	cluster.CloudOrOnPrem, cluster.CSP, err = getCloudInfo(clientset, config)
 	if err != nil {
 		fmt.Println("Error getting cloud info\n", err)
-		//TODO: dont reutrn cluster in error case
 		return cluster
 	}
 
@@ -63,19 +58,17 @@ func HandleDataUpdates() ClusterInfo {
 	discovClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
 		fmt.Println("Error getting discovery client\n", err)
-		//TODO: dont reutrn cluster in error case
 		return cluster
 	}
 	k8sVersion, err := discovClient.ServerVersion()
 	if err != nil {
 		fmt.Println("Error getting server version (GitVersion)\n", err)
-		//TODO: dont reutrn cluster in error case
 		return cluster
 	}
 	cluster.K8sVersion = k8sVersion.GitVersion
 
-	//TODO: combine range based for loops over nodes array
-	//Count GPUs
+    // improvement: combine the following two range based for loops
+	//Count GPUs and unhealthy GPUs
 	totalGPUs := 0
 	totalUnhealthy := 0
 	for _, node := range cluster.Nodes {
@@ -102,7 +95,7 @@ func HandleDataUpdates() ClusterInfo {
 				// type already in map, increment it
 				cluster.GPUDist[GPU.ProductName] = cluster.GPUDist[GPU.ProductName] + 1
 			} else {
-				// type not in mat, set it to 1
+				// type not in map, set it to 1
 				cluster.GPUDist[GPU.ProductName] = 1
 			}
 		}
@@ -118,8 +111,6 @@ func HandleDataUpdates() ClusterInfo {
 		}
 	}
 
-	// TODO: How many GPU are in good/bad state?
-	//       idea: Check NVSMI return value maybe?
 	// get node names
 	var names []string
 	for _, elem := range cluster.Nodes {
@@ -135,7 +126,6 @@ func HandleDataUpdates() ClusterInfo {
 
     path := os.Getenv("FILEPATH")
 
-	fmt.Println("printing")
 	file, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Print("failed creating csv file\n", err)
@@ -152,7 +142,6 @@ func HandleDataUpdates() ClusterInfo {
 		fmt.Print("error writing to file\n", err)
 		return cluster
 	}
-	fmt.Println("DOne")
     csvWriter.Flush()
 	file.Close()
 	return cluster
@@ -161,11 +150,6 @@ func HandleDataUpdates() ClusterInfo {
 // GetK8s returns Kubernetse clientest and config for the cluster the app is running on
 func GetK8s() (*kubernetes.Clientset, *rest.Config, error) {
 
-	// set up config and clientset for the cluster
-	//    rules := clientcmd.NewDefaultClientConfigLoadingRules()
-	//    kubeconfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, &clientcmd.ConfigOverrides{})
-	//    config, err := kubeconfig.ClientConfig()
-	// the following line only works when running directly on cluster
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		fmt.Println("\nError in getting config")
@@ -202,9 +186,8 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
 		}
 	}
 	if !found {
-		//TODO: indicate here this just means no GPUs on this node
 		fmt.Println("Could not find nvidia device plugin daemondset pod",
-			"\nThis may be the result of a node with no GPUs")
+		        	"\nThis may be the result of a node with no GPUs")
 		return "", 1, nil
 	}
 
@@ -212,8 +195,8 @@ func runNVSMI(clientset *kubernetes.Clientset, config *rest.Config, nodeName str
 		Namespace(podNamespace).SubResource("exec")
 	command := []string{"/bin/bash", "-c", "nvidia-smi -q -x && echo -n $?"}
 	option := &corev1.PodExecOptions{
+        // potential future issue: may have to specify which container to exec on
 		Command: command,
-		//TODO: Past issue: MIGHT need to specify container
 		Stdin:  false,
 		Stdout: true,
 		Stderr: true,
@@ -269,12 +252,6 @@ func updateNodes(clientset *kubernetes.Clientset, config *rest.Config) ([]NodeIn
 	var nodes []NodeInfo
 
 	//for each node:
-	//create a NodeInfo instance
-	//populate instance with nodespec/status information
-	//run NVSMI to populate rest of node
-	//append to nodes
-
-	//for each node:
 	for _, node := range nodeList.Items {
 		var info NodeInfo
 		//populate instance with nodespec/status information
@@ -285,7 +262,7 @@ func updateNodes(clientset *kubernetes.Clientset, config *rest.Config) ([]NodeIn
 		info.NodeName = node.Name
 
 		// find VM or bare metal by getting labels
-		// TODO: Some nodes will omit this label - so this isn't 100% reliable
+		// Note: Some nodes will omit this label - so this isn't 100% reliable
 		labels := node.Labels
 		hyperLabel := "feature.node.kubernetes.io/cpu-cpuid.HYPERVISOR"
 		if value, present := labels[hyperLabel]; value == "true" {
@@ -357,13 +334,14 @@ func getDistribution(clientset *kubernetes.Clientset, config *rest.Config) (stri
 	distributionsLower := []string{"tanzu", "openshift", "k3s", ".rke."}
 
 	// grep style search for distribution
-	var match string
+	var match []string
+    var result string
 	matches := 0
 	for idx, distribution := range distributionsLower {
 		for label := range labels {
 			if strings.Contains(label, distribution) {
 				//found a match
-				match = distributions[idx]
+				match = append(match, distributions[idx])
 				matches = matches + 1
 			}
 		}
@@ -371,13 +349,17 @@ func getDistribution(clientset *kubernetes.Clientset, config *rest.Config) (stri
 
 	// If no match, it's standard distribution
 	if matches == 0 {
-		match = "Standard"
+		result = "Standard"
 	} else if matches > 1 {
 		// multiple distributions detected, cant confirm one
-        //TODO: report the two that it found
-		match = "Unknown"
-	}
-	return match, nil
+		result = "Multiple distributions detected: "
+        for _, elem := range match {
+            result = result + " " + elem
+        }
+	} else {
+        result = match[0]
+    }
+	return result, nil
 }
 
 func getCloudInfo(clientset *kubernetes.Clientset, config *rest.Config) (string, string, error) {

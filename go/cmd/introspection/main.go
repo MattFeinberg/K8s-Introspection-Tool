@@ -1,7 +1,6 @@
 /*
  * Go program to gather information on a Kubernetes cluster
- * Gathers information on each node, then uses nvidia-smi and
- * dcgm-exporter to get GPU metrics for the cluster
+ * Gathers information at a cluster level and on each node
  */
 
 package main
@@ -28,7 +27,7 @@ func main() {
 		fmt.Println("Error reading rate variable as integer")
 	}
 	// default rate is 24 (hours)
-	ticker := time.NewTicker(time.Duration(rate) * time.Second)
+	ticker := time.NewTicker(time.Duration(rate) * time.Hour)
 	quit := make(chan bool)
     var wg sync.WaitGroup
     wg.Add(1)
@@ -52,7 +51,6 @@ func main() {
 	}
 
     if deployWeb {
-        fmt.Println("Hosting Web")
     	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
     	handleFunc := web.BuildHandleFunc(&cluster)
     	http.HandleFunc("/", handleFunc)

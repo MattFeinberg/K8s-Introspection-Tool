@@ -32,7 +32,6 @@ func BuildHandleFunc(cluster *data.ClusterInfo) func(w http.ResponseWriter, r *h
 	}
 }
 
-// maybe make a function that takes a filename and does this...
 func executeIndex(w http.ResponseWriter, r *http.Request, clientset *kubernetes.Clientset, config *rest.Config) {
 	fileName := "html/index.html"
 	t, err := template.ParseFiles(fileName)
